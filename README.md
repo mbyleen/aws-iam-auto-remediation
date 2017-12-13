@@ -1,0 +1,1 @@
+This AWS Lambda function allows auto-remediation of a user adding him or her -self to an IAM group. Its setup is based on material found in this [post](https://aws.amazon.com/blogs/security/how-to-detect-and-automatically-revoke-unintended-iam-access-with-amazon-cloudwatch-events/) by 
