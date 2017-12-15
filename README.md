@@ -1,4 +1,4 @@
-This AWS Lambda function allows auto-remediation of a user adding him or her -self to an IAM group. Its setup is based on material found in [this post](https://aws.amazon.com/blogs/security/how-to-detect-and-automatically-revoke-unintended-iam-access-with-amazon-cloudwatch-events/) by Mustafa Torun on the AWS Security Blog and follows it closely, repurposing it to work for a slightly different task.
+This AWS Lambda function allows auto-remediation of a user adding themself to an IAM group. Its setup is based on material found in [this post](https://aws.amazon.com/blogs/security/how-to-detect-and-automatically-revoke-unintended-iam-access-with-amazon-cloudwatch-events/) by Mustafa Torun on the AWS Security Blog and follows it closely, repurposing it to work for a slightly different task.
 
 #### Step 1: Create an IAM role for the Lambda function ####
 
@@ -46,7 +46,7 @@ This trust policy document is also necessary and is found in the file
 }
 ```
 
-Make sure to replace the <span style="color: red">example account number</span> in red with your account number.
+Make sure to replace the example account number in red with your account number.
 Create an execution role using these two policies by executing the following CLI
 commands:
 
@@ -61,10 +61,10 @@ $ aws iam create-role \
 
 $ aws iam attach-role-policy \
 --role-name IamAutoremediation \
---policy-arn arn:aws:iam::<span style="color: red">123456789012</span>:policy/AutoremediationIAMandLogs
+--policy-arn arn:aws:iam::123456789012:policy/AutoremediationIAMandLogs
 ```
 
-#### Step 2: Create the Lambda functioni ####
+#### Step 2: Create the Lambda function ####
 
 The following lambda function will be triggered by a Cloudwatch event and gather
 information from that event to reverse the action of a user adding themself
@@ -118,7 +118,7 @@ $ aws lambda create-function \
 --runtime nodejs6.10 \
 --zip-file fileb://lambda.zip \
 --handler lambda.handler \
---role arn:aws:iam:<span style="color: red">123456789012</span>:role/IamAutoremediation \
+--role arn:aws:iam:123456789012:role/IamAutoremediation \
 --timeout 30
 ```
 
@@ -158,7 +158,7 @@ $ aws events put-rule \
 $ aws events put-targets \
 --rule DetectAddUserToGroupCalls \
 --targets
-Id=1,Arn=arn:aws:lambda:us-east-1:<span style="color: red">123456789012</span>:function:UndoAddSelfToGroup
+Id=1,Arn=arn:aws:lambda:us-east-1:123456789012:function:UndoAddSelfToGroup
 ```
 
 Run this command to allow CloudWatch Events to invoke the Lambda function:
@@ -170,9 +170,7 @@ $ aws lambda add-permission \
 --action 'lambda:InvokeFunction' \
 --principal events.amazonaws.com \
 --source-arn
-arn:aws:events:us-east-1:<span style="color: red">123456789012</span>:rule/DetectAddUserToGroupCalls
+arn:aws:events:us-east-1:123456789012:rule/DetectAddUserToGroupCalls
 ```
 
 With all of these elements set up, instances of a user adding themself to a group will be automatically detected and remediated.
-
--TODO: convert AWS CLI setup to shell script
