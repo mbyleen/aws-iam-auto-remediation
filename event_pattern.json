@@ -6,10 +6,6 @@
     "eventSource": [
       "iam.amazonaws.com"
     ],
-    "userIdentity": {
-      "type": [
-        "IAMUser"
-      ],
     "eventName": [
       "AddUserToGroup"
     ]
