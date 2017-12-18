@@ -46,7 +46,7 @@ This trust policy document is also necessary and is found in the file
 }
 ```
 
-Make sure to replace the example account number in red with your account number.
+Make sure to replace the example account number (123456789012) with your account number.
 Create an execution role using these two policies by executing the following CLI
 commands:
 
@@ -77,31 +77,38 @@ var aws = require('aws-sdk');
 var iam = new aws.IAM();
 
 exports.handler = function(event, context) {
-    // Log the incoming Amazon CloudWatch Events event
+    // Log the incoming Amazon CloudWatch Events event     
     console.log('Received event:', JSON.stringify(event, null, 2));
 
-    // If the user is adding herself to a group
-    var userName = event.detail.userIdentity.userName;
-    if (event.detail.eventName === "AddUserToGroup" &&
-        event.detail.requestParameters.userName === userName) {
+     // If the caller is not an IAM user, do nothing
+     if (event.detail.userIdentity.type != 'IAMUser') {
+         context.done();
+     } else {
+        var userName = event.detail.userIdentity.userName;
 
-        // Remove the user from that group
-        var groupName = event.detail.requestParameters.groupName;
-        console.log('User adding self to group detected. Removing user',
-            userName, 'from group', groupName);
+        // If the user is adding herself to a group
+        if (event.detail.eventName === "AddUserToGroup" &&
+                event.detail.requestParameters.userName === userName) {
 
-        var params = {
-            GroupName: groupName,
-            UserName: userName
-        };
-        iam.removeUserFromGroup(params, function(err, data) {
-            if (err) {
-                console.log(err, err.stack);
-            } else {
-                console.log(data);
-            }
-        });
-    }
+            // Remove the user from that group
+            var groupName = event.detail.requestParameters.groupName;
+            console.log('User adding self to group detected. Removing user',
+                            userName, 'from group', groupName);
+
+            var params = {
+                GroupName: groupName, 
+                UserName: userName
+            };
+            iam.removeUserFromGroup(params, function(err, data) {
+                if (err) {
+                    console.log(err, err.stack);
+                } else {
+                    console.log(data);
+                }
+            });
+        }
+     }
+  }
 ```
 
 Run the following AWS CLI command to create the Lambda function:
@@ -136,10 +143,6 @@ user being added to an IAM group and is found in the file event_pattern.json:
     "eventSource": [
       "iam.amazonaws.com"
     ],
-    "userIdentity": {
-      "type": [
-        "IAMUser"
-      ],
     "eventName": [
       "AddUserToGroup"
     ]
@@ -157,7 +160,7 @@ $ aws events put-rule \
 
 $ aws events put-targets \
 --rule DetectAddUserToGroupCalls \
---targets
+--targets \
 Id=1,Arn=arn:aws:lambda:us-east-1:123456789012:function:UndoAddSelfToGroup
 ```
 
@@ -169,8 +172,8 @@ $ aws lambda add-permission \
 --statement-id AllowCloudWatchEventsToInvoke \
 --action 'lambda:InvokeFunction' \
 --principal events.amazonaws.com \
---source-arn
+--source-arn \
 arn:aws:events:us-east-1:123456789012:rule/DetectAddUserToGroupCalls
 ```
 
-With all of these elements set up, instances of a user adding themself to a group will be automatically detected and remediated.
+With all of these elements set up, instances of a user adding themself to a group will be automatically detected and reversed.
